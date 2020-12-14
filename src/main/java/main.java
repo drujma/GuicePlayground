@@ -1,21 +1,23 @@
-import com.google.inject.AbstractModule;
+import com.feps.handlers.MessageQueueHandler;
+import com.feps.modules.ApplicationModule;
+import com.feps.modules.AwsModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class main {
-    public static void main(String[] argv) {
-        try {
-            List<AbstractModule> modules = Arrays.asList(new CommunicationModule(), new MetricModule());
-            Injector injector = Guice.createInjector(modules);
+    public static void main(String[] argv) throws Exception {
+        final Injector injector = Guice.createInjector(new AwsModule(), new ApplicationModule());
+        final MessageQueueHandler messageQueueHandler = injector.getInstance(MessageQueueHandler.class);
+        messageQueueHandler.start();
 
-            final Communication instance = injector.getInstance(Communication.class);
-            instance.sendMessage("");
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+        messageQueueHandler.stop();
     }
 }
